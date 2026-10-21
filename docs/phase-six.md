@@ -1,0 +1,17 @@
+# Planning and everyday administration
+
+Open a classroom → Planning. Start with a syllabus: name each topic, paste its coverage, save and approve. Sources are private immutable versions. Editing creates a new version; older dependent documents retain their source snapshot and show a stale-source check.
+
+Build a blueprint with topic, outcome, question type, difficulty, count and marks. The allocations must match the target. Papers and question banks use approved sources from the same classroom. Every question carries a topic, marks, answer, marking guide and exact syllabus quote. Checks cover totals, duplicates, source quotes, selected syllabus coverage and blueprint topic allocation. These checks cannot establish factual accuracy, subtle ambiguity or measured difficulty; inspect the wording and solution before approving.
+
+Use an approved question bank to start a paper, or an approved paper to start a variant. Change the wording and check the totals. A/B variants are teacher-reviewed drafts; equivalence has not been measured. Sources listed on the draft preserve reuse history. Search the library by topic or question wording; History exposes prior versions. Approving does not release a paper or publish an assignment.
+
+Meeting notes retain the supplied original, decisions, actions, owners and deadlines. Local generation must leave unspecified ownership/deadlines unassigned. Translation retains the original and target language for comparison. Reports use a saved approved column template and a dated snapshot of recorded classroom activity, including only current-rubric approved/reviewed decisions. The app does not invent teaching logs. Report templates currently offer aggregate classroom columns; institution-specific outcome formulas and custom departmental spreadsheets require separately agreed mappings.
+
+Local AI is optional. Choose an installed Ollama text model explicitly. Source and input budgets are enforced without truncation. Results always enter the library as drafts, even if checks pass. Malformed output fails visibly. The durable worker records prompt version, model digest, tokens and duration. One active planning job per classroom, 20 reserved attempts per UTC day, at most three attempts/job. Failed jobs can be retried; active jobs can be canceled. Expired leases become failed instead of silently duplicating work. A stale worker attempt cannot overwrite a later attempt.
+
+Student copy omits question solutions, marking guides and original private notes. Teacher copy includes them. Both exports require classroom staff access and are audited; students cannot use these private planning endpoints. Before sharing a student copy, inspect any teacher-authored free text for accidental answers.
+
+Find a tool (Ctrl/Cmd K) accepts short navigation requests. It previews an allowlisted destination and waits for Open. Ambiguous requests stay unresolved. Requests to send, publish, delete, approve or grade never execute through the command box; use the structured workflow and its approvals.
+
+Limits: grounded generation depends on the quality of teacher-supplied syllabus text. OCR/scanned syllabus ingestion, formal variant-equivalence benchmarking, automatic observed-performance mapping between bank questions and graded rubric questions, complex optional-question papers and institution-specific exports remain separate work. A matching citation is evidence of source coverage, not proof that a question or answer is correct.

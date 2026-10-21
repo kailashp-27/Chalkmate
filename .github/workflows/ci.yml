@@ -1,0 +1,73 @@
+name: Foundation checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - name: Install backend
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements.lock.txt
+          .venv/bin/python -m pip install --no-deps -e .
+      - name: Start local Supabase
+        run: .venv/bin/python scripts/start_local_supabase.py
+      - name: Configure local environment and migrate
+        run: .venv/bin/python scripts/local_setup.py
+      - name: Static checks
+        run: |
+          .venv/bin/python -m ruff check services scripts
+          .venv/bin/python -m ruff format --check services scripts
+          .venv/bin/python -m pip check
+          .venv/bin/python -m alembic check
+          npm run typecheck
+      - name: Check generated API contract
+        run: |
+          .venv/bin/python scripts/export_openapi.py
+          npx --yes --package=openapi-typescript@7.13.0 openapi-typescript contracts/openapi.json -o apps/web/src/lib/api-schema.ts
+          git diff --exit-code -- contracts/openapi.json apps/web/src/lib/api-schema.ts
+      - run: npm run build
+      - name: Start application and wait for readiness
+        run: |
+          .venv/bin/python -m uvicorn chalkmate.main:app --host 127.0.0.1 --port 8100 > /tmp/chalkmate-api.log 2>&1 &
+          npm run start --workspace @chalkmate/web -- --hostname 127.0.0.1 > /tmp/chalkmate-web.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8100/health && curl --fail --silent http://localhost:3000/health; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: API and PostgreSQL isolation checks
+        run: .venv/bin/python -m pytest -q --tb=short
+      - name: Synthetic benchmark rehearsal and isolated application-schema restore
+        run: |
+          .venv/bin/python scripts/evaluate_pilot.py evaluation/pilot-example.json --output .tmp/pilot-report.json
+          .venv/bin/python scripts/restore_drill.py --cleanup
+      - name: Full local Auth and private-file recovery rehearsal
+        run: .venv/bin/python scripts/full_stack_recovery.py rehearse --cleanup
+      - name: Start local delivery worker
+        run: docker compose --env-file .env -f infra/compose.yaml --profile workers up -d --build
+      - name: Install test browser
+        run: npx playwright install --with-deps chromium
+      - name: Browser workflow
+        run: npm run test:e2e --workspace @chalkmate/web
+      - name: Stop local containers
+        if: always()
+        run: |
+          docker compose --env-file .env -f infra/compose.yaml --profile workers down
+          npx supabase stop

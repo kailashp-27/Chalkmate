@@ -1,0 +1,17 @@
+# Follow-on stages 8–9
+
+These stages were proposed after the original seven-stage roadmap and explicitly accepted by the user on 19 October 2026.
+
+## 8. Evidence-linked reporting
+
+Reuse immutable Planning versions for `marks_template`: ordered allowlisted columns with custom headings, released/approved score basis and an explicit withdrawn-student switch. Approval checks unique columns/headings and required fields. `POST /v1/assessments/{id}/marks-exports` takes an approved current template from the same classroom and stores an immutable, private preview with values, status, decision/rubric provenance and a digest. `GET /v1/classrooms/{id}/marks-exports` lists previews; `GET /v1/marks-exports/{id}` reads a preview; `/download?format=csv|xlsx` downloads those exact values. No re-query on download. Guard spreadsheet formula injection, preserve numeric precision and never replace missing/unapproved scores with zero. Archived classrooms are read-only. Staff can read/download; editable teachers can prepare; exports are audited.
+
+Bank questions gain append-only explicit links to assessment/rubric/question versions through `POST /v1/planning/{id}/question-links`. Links include bank question index and reason; only approved latest bank/paper versions can be linked to a current approved rubric question in the same classroom. Unlink appends a revocation instead of deleting history. `GET /v1/planning/{id}/question-performance` returns link provenance, current/stale status and aggregate current-rubric reviewed results. Never infer mappings from text, count stale links, pool unequal maxima or show student identities. Source-document reuse history is returned separately; counts describe recorded links/reuse, not measured question equivalence.
+
+## 9. Local recovery and service readiness
+
+Local-only backup tooling captures a consistent application-schema and Auth/Storage data snapshot, migration state, private file bytes and integrity manifests. A separate recovery drill starts a uniquely named Supabase stack on different loopback ports, restores only into that stack, checks database/file hashes, verifies restored sign-in and authorized private download, denies anonymous/other-user access and cleans up only its own resources. Never restore over the active stack. Reject symlink/path traversal/tampered bundles and mismatched schema/image versions. Keep backups and probe credentials in ignored private local folders; print no secrets or raw work. No external sending, hosting or purchases. Record exact scope/limitations and recovery timing; a local drill is not a production SLA.
+
+Extend the staff-only classroom readiness view with bounded checks for database, Auth, private Storage, Redis, worker heartbeat and optional local Ollama, plus classroom-scoped queue attention. Heartbeats use narrowly scoped database functions and a worker task; no global records or connection secrets reach the client. A safe last-drill summary may expose verification status/time, never backup paths, users or other classrooms. Manual work remains usable when optional Ollama is down.
+
+Verification: real local database permission and snapshot tests, CSV/XLSX column/precision/injection tests, bank link/stale/revocation tests, service failure/heartbeat tests, Chrome template-preview-download and question-link workflows in light/dark/mobile, and a full isolated recovery rehearsal with synthetic sign-in/private-file probe. Real-teacher educational-quality targets remain outside these engineering checks.

@@ -1,0 +1,185 @@
+.assignment-list {
+  display: grid;
+  gap: 12px;
+}
+.assignment-row,
+.campaign-row {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+.assignment-row:hover,
+.campaign-row:hover,
+.campaign-row.chosen {
+  border-color: var(--accent);
+  background: var(--pale);
+}
+.assignment-row > div,
+.campaign-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.assignment-row strong,
+.campaign-row strong {
+  display: block;
+  font-size: 16px;
+  color: var(--ink);
+}
+.assignment-row span,
+.assignment-row small,
+.campaign-row > div span {
+  display: block;
+  color: var(--muted);
+}
+.assignment-instructions,
+.student-response-form,
+.campaign-composer,
+.campaign-preview,
+.delivery-ledger {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  background: var(--surface);
+}
+.assignment-instructions > div {
+  white-space: pre-wrap;
+  margin-top: 16px;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.assignment-actions {
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.assignment-response {
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+}
+.assignment-response header,
+.campaign-preview > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.assignment-response p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 12px;
+}
+.audience-picker {
+  max-height: 280px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.followup-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.score-rule-inputs {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 16px;
+}
+.followup-workspace textarea,
+.student-response-form textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+}
+.personal-message {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 0 8px 8px 0;
+}
+.personal-message h4 {
+  margin: 10px 0;
+  color: var(--ink);
+}
+.personal-message pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+.campaign-history {
+  margin-top: 36px;
+}
+.campaign-row {
+  margin-top: 12px;
+}
+.campaign-counts,
+.ledger-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ledger-actions {
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 120px;
+}
+.block {
+  display: block;
+}
+.warning-text {
+  color: var(--warning);
+}
+.mail-transport-note p {
+  margin: 4px 0;
+}
+.assignment-link-page {
+  max-width: 1000px;
+  margin: auto;
+  padding: 32px;
+}
+.assignment-link-page > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.tabs {
+  overflow-x: auto;
+}
+.tabs .tab {
+  flex-shrink: 0;
+}
+@media (max-width: 760px) {
+  .followup-filter-grid,
+  .score-rule-inputs {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .assignment-row,
+  .campaign-row {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+  .assignment-instructions,
+  .student-response-form,
+  .campaign-composer,
+  .campaign-preview,
+  .delivery-ledger {
+    padding: 16px;
+  }
+  .assignment-link-page {
+    padding: 16px;
+  }
+  .campaign-counts {
+    width: 100%;
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "chalkmate",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @chalkmate/web",
+    "build": "npm run build --workspace @chalkmate/web",
+    "typecheck": "npm run typecheck --workspace @chalkmate/web"
+  },
+  "devDependencies": {
+    "supabase": "2.121.0"
+  }
+}

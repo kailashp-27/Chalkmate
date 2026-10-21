@@ -1,0 +1,51 @@
+name: chalkmate
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  worker:
+    profiles: ["workers"]
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    command: ["celery", "-A", "chalkmate.worker:celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+    environment:
+      WORKER_DATABASE_URL: ${WORKER_CONTAINER_DATABASE_URL:?Run scripts/local_setup.py first}
+      SUPABASE_URL: http://host.docker.internal:54321
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?Run local setup}
+      OLLAMA_URL: http://host.docker.internal:11434
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-mailpit}
+      MAILPIT_URL: http://host.docker.internal:54324
+      MAIL_FROM: ${MAIL_FROM:-Chalkmate <teacher@example.com>}
+      ENABLE_EXTERNAL_EMAIL: ${ENABLE_EXTERNAL_EMAIL:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma3:4b}
+      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-gemma3:4b}
+      CELERY_BROKER_URL: redis://redis:6379/0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+  scheduler:
+    profiles: ["workers"]
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    command: ["celery", "-A", "chalkmate.worker:celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
+    environment:
+      WORKER_DATABASE_URL: ${WORKER_CONTAINER_DATABASE_URL:?Run scripts/local_setup.py first}
+      CELERY_BROKER_URL: redis://redis:6379/0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy

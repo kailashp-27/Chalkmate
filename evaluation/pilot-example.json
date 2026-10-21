@@ -1,0 +1,17 @@
+{
+  "dataset": "synthetic-workflow-rehearsal",
+  "synthetic": true,
+  "samples": [
+    {
+      "sample_id": "demo-answer-1", "sheet_id": "demo-held-out-sheet-1",
+      "split": "held_out", "consented": true,
+      "answer_type": "descriptive", "scan_quality": "clear",
+      "maximum": 10, "teacher_mark": 8, "model_mark": 7.5,
+      "second_teacher_mark": 8, "identity_correct": true, "question_correct": true,
+      "rubric_version": "synthetic-rubric-v1", "model_digest": "synthetic-no-model-run",
+      "baseline_seconds": 100, "review_seconds": 70, "latency_seconds": 12,
+      "flagged_for_review": true,
+      "reference_text": "A stack uses LIFO", "extracted_text": "A stack uses LIFO"
+    }
+  ]
+}

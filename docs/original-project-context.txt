@@ -1,0 +1,112 @@
+We’ll build a complete teacher workspace that connects assessment, evaluation, student records, follow-up teaching, and communication. Since this is your personal product, we’ll give it a solid foundation and build the features in phases.
+I’ve saved the complete plan here: Teacher-Assistant-Product-and-Technical-Plan.md. It includes the architecture, data model, processing states, implementation roadmap, testing, and release criteria.
+Below is the main plan.
+The product will revolve around one connected teaching workflow.
+A teacher creates a classroom, imports students, prepares an assessment, uploads answer sheets, reviews suggested marks, releases results, identifies learning gaps, and sends suitable follow-up work.
+For now, we can use Teachora as a working name. We haven’t checked name availability yet.
+Product area	What we will build
+Classrooms and student records	Classes, subjects, student rosters, email IDs, enrollments, assessment history, assignment status, and student profiles.
+Assessment creation	Syllabus-based questions, question-paper blueprints, model answers, rubric builder, question bank, paper variants, and question-quality checks.
+Evaluation workspace	Batch uploads, handwriting extraction, side-by-side scan review, partial marks, evidence-linked suggestions, calibration, and teacher approval.
+Consistent grading	Question-by-question review, review queues, rubric versions, affected-answer rechecks, and before/after comparisons.
+Learning support	Feedback cards, common misconceptions, topic summaries, remedial assignments, revision packs, and re-evaluation requests.
+Assignments and communication	Assignment publishing, submissions, missing-work tracking, filtered emails, reminders, and delivery status.
+Daily administration	Marks export, teaching logs, course reports, announcements, translations, meeting actions, and eventually a command box.
+
+
+All these remain in the product scope. The phases below determine the order in which we implement them.
+The classroom records will power your email automation idea.
+Each student will have a stable record containing their registration number, name, email, classroom enrollments, approved marks, assignments, and feedback. Students can be added before they create an account; later, a verified invitation connects their account to their record.
+Your example becomes this workflow:
+“For Class A, send the recursion remedial assignment to students who scored below 25 out of 50 in CAT 1.”
+
+1. The app identifies the classroom, assessment, and approved assignment.
+2. Database rules select students with approved marks strictly below 25.
+3. The teacher sees a recipient preview, including missing or invalid email records.
+4. The app prepares individual messages with the assignment and relevant feedback.
+5. The teacher reviews and sends them.
+6. Background jobs deliver the emails and record failures, bounces, and delivery events.
+A student who scored exactly 25 is excluded. Missing or ungraded work is shown separately rather than treated as zero.
+The AI can interpret the instruction and draft the message. Application code will select recipients, calculate totals, check permissions, and perform the send. That separation is essential for accuracy.
+Initially, emails will come from the app’s verified domain, with the teacher’s reply-to address. Resend requires domain verification; sending directly from a teacher’s Gmail or Outlook account would be a later OAuth integration. resend.com
+For evaluation, we will build a reviewable pipeline.
+Step	What happens
+1. Prepare the assessment	Teacher supplies questions, maximum marks, rubric, model answers, and acceptable alternatives.
+2. Add calibration examples	Teacher provides a few marked answers showing full, partial, and low-credit responses.
+3. Upload papers	The app checks files, page order, student identity, and question mapping.
+4. Extract answers	OCR reads text while retaining page locations and uncertainty signals.
+5. Suggest marks	AI evaluates each rubric criterion and returns marks, evidence, omissions, and explanations.
+6. Validate	Code checks score bounds, criterion totals, required fields, and evidence references.
+7. Teacher review	Teacher corrects unclear text, accepts or changes suggestions, and approves results.
+8. Release and follow up	Students receive approved feedback; class insights and remedial work become available.
+
+
+The review screen should show the original answer, extracted text, rubric, suggested marks, and justification together.
+Unreadable handwriting becomes a review task. It must never silently become a wrong answer or zero.
+We’ll initially validate English short and medium descriptive answers. Equations, diagrams, long proofs, regional languages, and code-heavy responses need separate evaluation before we claim reliable support.
+Rubric changes will be handled through versions.
+Suppose a professor decides that an alternative method deserves two marks.
+The app will:
+- Create a new rubric version.
+- Identify potentially affected answers.
+- Generate revised suggestions.
+- Show the teacher the old and proposed marks.
+- Preserve earlier decisions and released results.
+- Update approved feedback and analytics after review.
+Calibration examples will also be versioned. Teacher corrections can become approved examples, but the system should not automatically learn from every override.
+My recommended technology stack is the following.
+Layer	Technology	Why it fits
+Frontend	Next.js, React, TypeScript	Teacher and student portals with a maintainable, typed interface.
+UI	Tailwind CSS, shadcn/ui	Consistent tables, forms, dialogs, and navigation.
+Forms and server data	React Hook Form, Zod, TanStack Query	Validated forms, API interactions, caching, and loading states.
+Answer-sheet viewer	PDF.js / react-pdf	Zoomable scans and evidence overlays.
+Backend	Python FastAPI, Pydantic	Business rules, document workflows, validation, and AI integration.
+Database	PostgreSQL through Supabase	Connected classroom records, transactions, marks, and version history.
+Database models	SQLAlchemy, Alembic	Maintainable models and controlled database migrations.
+Authentication	Supabase Auth	Login, recovery, and invitations.
+File storage	Private Supabase Storage	Scans, teaching materials, assignments, and exports.
+Background processing	Celery with Redis	OCR, evaluation, exports, reminders, and email jobs.
+OCR candidate	Azure Document Intelligence Read	Handwritten and printed text extraction.
+AI model candidate	Gemini through its official Python SDK	Image-aware evaluation and structured generation.
+Email	Resend	Transactional messages and delivery tracking.
+Exports	openpyxl, python-docx, ReportLab	Excel marks, editable documents, and PDF reports.
+Hosting	Vercel frontend; Render API/workers	Separate web requests from long-running processing.
+Testing and monitoring	pytest, Playwright, Sentry, GitHub Actions	Business-rule tests, browser verification, error tracking, and automated checks.
+
+
+Azure’s Read service supports handwritten extraction, while Gemini supports image inputs and structured outputs. These make them suitable initial candidates; we’ll choose the production combination using actual answer-sheet benchmarks. Microsoft Learn
+For uploaded teaching material, we can add PostgreSQL full-text search and pgvector when semantic retrieval becomes useful. We don’t need a separate vector database at the beginning.
+The architecture will use one modular backend with background workers.
+FastAPI will own classroom, assessment, grading, assignment, and communication rules. Next.js will provide the interface. Workers will run expensive or slow operations independently of the browser.
+A teacher should be able to upload 60 papers, close the website, and return later to check progress.
+FastAPI’s documentation recommends tools such as Celery for heavier background computation. Render supports background worker processes suited to this separation. FastAPI
+We’ll keep durable job records in PostgreSQL, including processing checkpoints and failures. Jobs will support bounded retries, cancellation, and recovery.
+For email, we’ll combine a delivery ledger with provider idempotency keys. Resend’s idempotency window is 24 hours, so uncertain sends need reconciliation before retries outside that window. Resend
+We will build in eight phases.
+Phase	Deliverable	Completion check
+0. Validate the difficult part	Representative answer-sheet samples, OCR comparison, initial grading benchmark, review-screen prototype.	We understand supported answer types, errors, cost, and review effort.
+1. Build the foundation	Authentication, classrooms, student import, permissions, storage, design system.	Teachers and students can access only their authorized records.
+2. Complete one evaluation workflow	Assessments, rubrics, uploads, extraction review, suggested marks, approval, release, marks export.	One class can complete an assessment with traceable results.
+3. Improve grading consistency	Calibration, rubric builder, question-by-question review, rubric changes, feedback cards, re-evaluation.	Revised grading preserves history and produces reviewable changes.
+4. Connect classroom follow-up	Student portal, assignments, submissions, score filters, email sending, reminders.	Your below-25 workflow works end to end.
+5. Add teaching intelligence	Misconceptions, topic analysis, remedial generation, next-class revision packs.	Teachers can inspect the evidence and approve follow-up content.
+6. Add planning and administration	Question bank, blueprints, variants, syllabus checks, reports, meeting actions, command box.	Features use reliable records and permission-scoped operations.
+7. Pilot and polish	Real teacher trials, accessibility, recovery testing, performance, cost controls, documentation.	The complete workflow saves time at acceptable quality.
+
+
+My planning estimate is 300–500 focused hours, including contingency. At 20 hours per week, that is roughly 15–25 weeks. A useful narrow pilot may be possible in 7–10 weeks, depending on sample availability and evaluation quality.
+Quality will be measured, especially for grading.
+We should begin with roughly 30–50 consented or anonymized papers from one subject, producing a few hundred labeled answers. Calibration examples and evaluation samples must be separate.
+We’ll measure:
+- Extraction errors and wrong student/question matches.
+- Difference between AI suggestions and teacher marks.
+- Severe over-marking and under-marking.
+- Frequency of teacher corrections.
+- Total review time compared with manual correction.
+- Processing cost per answer, paper, and class.
+Ordinary software tests will cover score boundaries, permissions, rubric changes, recipient filters, failed jobs, and email retries. A separate evaluation dataset will measure AI quality.
+The security foundation will include private files, scoped access, server-side secrets, audit history, and retention controls. Supabase supports database row-level security and private storage access; these must be configured and tested alongside backend authorization. Supabase Docs
+Costs will be controlled from the first processing prototype.
+We should budget separately for hosting, database/storage, OCR, model usage, and email. For example, 60 papers × 10 pages = 600 OCR pages before retries or reprocessing.
+Before processing a large batch, the app should show an estimated cost and enforce a spending limit. We’ll cache unchanged work and re-evaluate only affected answers where possible. Exact operating costs will come from the benchmark and current provider rates.
+The first implementation milestone should be one complete classroom assessment: import students, upload papers, review suggestions, release marks, select students below a threshold, and send approved remedial work. Completing that flow gives every later feature a dependable foundation.
